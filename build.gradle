@@ -20,7 +20,7 @@ dependencies {
     implementation 'com.google.flogger:flogger-system-backend:0.5.1'
 }
 
-mainClassName = 'Server'
+mainClassName = 'com.hedera.hashgraph.poa.App'
 
 jar {
     manifest {

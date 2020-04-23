@@ -1,16 +1,18 @@
+package com.hedera.hashgraph.poa;
+
 import com.google.common.flogger.FluentLogger;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 
-public class Server extends AbstractVerticle {
+public class App extends AbstractVerticle {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
     private HttpServer httpServer;
 
     public static void main(String[] args) {
-        Vertx.vertx().deployVerticle(new Server());
+        Vertx.vertx().deployVerticle(new App());
     }
 
     @Override
