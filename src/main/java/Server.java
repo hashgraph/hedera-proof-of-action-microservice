@@ -1,6 +1,5 @@
 import com.google.common.flogger.FluentLogger;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
@@ -36,7 +35,7 @@ public class Server extends AbstractVerticle {
     }
 
     @Override
-    public void stop(Future<Void> stopFuture) {
-        httpServer.close(stopFuture);
+    public void stop(Promise<Void> stopPromise) {
+        httpServer.close(stopPromise);
     }
 }
