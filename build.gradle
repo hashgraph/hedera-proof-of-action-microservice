@@ -1,16 +1,35 @@
 plugins {
     id 'java'
     id 'application'
+    id 'com.github.johnrengelman.shadow' version '5.2.0'
 }
 
 repositories {
     jcenter()
 }
 
+sourceCompatibility = '13'
+
 dependencies {
-    implementation 'com.google.guava:guava:28.2-jre'
+    // https://vertx.io/
+    implementation 'io.vertx:vertx-core:3.9.0'
+    implementation 'io.vertx:vertx-web:3.9.0'
+
+    // https://google.github.io/flogger/
+    implementation 'com.google.flogger:flogger:0.5.1'
+    implementation 'com.google.flogger:flogger-system-backend:0.5.1'
 }
 
-application {
-    mainClassName = 'App'
+mainClassName = 'Server'
+
+jar {
+    manifest {
+        attributes 'Main-Class': mainClassName
+    }
+}
+
+shadowJar {
+    // by default, this plugin generates a new `-all` jar
+    // the empty string makes it override the non-all jar
+    classifier = ''
 }
