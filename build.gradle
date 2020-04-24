@@ -1,35 +1,59 @@
+buildscript {
+    dependencies {
+        classpath "org.postgresql:postgresql:42.2.12"
+    }
+}
+
 plugins {
-    id 'java'
-    id 'application'
-    id 'com.github.johnrengelman.shadow' version '5.2.0'
+    id "java"
+    id "application"
+    id "com.github.johnrengelman.shadow" version "5.2.0"
+    id "org.flywaydb.flyway" version "6.4.0"
 }
 
 repositories {
     jcenter()
 }
 
-sourceCompatibility = '13'
+sourceCompatibility = 13
 
 dependencies {
+    implementation "com.hedera.hashgraph:sdk-corda:2.0.0-beta.1"
+    implementation "io.grpc:grpc-netty:1.29.0"
+
+    // https://github.com/google/guava
+    implementation "com.google.guava:guava:29.0-jre"
+
+    // https://github.com/cdimascio/java-dotenv
+    implementation "io.github.cdimascio:java-dotenv:5.1.4"
+
     // https://vertx.io/
-    implementation 'io.vertx:vertx-core:3.9.0'
-    implementation 'io.vertx:vertx-web:3.9.0'
+    implementation "io.vertx:vertx-core:3.9.0"
+    implementation "io.vertx:vertx-web:3.9.0"
+    implementation "io.vertx:vertx-pg-client:3.9.0"
 
     // https://google.github.io/flogger/
-    implementation 'com.google.flogger:flogger:0.5.1'
-    implementation 'com.google.flogger:flogger-system-backend:0.5.1'
+    implementation "com.google.flogger:flogger:0.5.1"
+    implementation "com.google.flogger:flogger-system-backend:0.5.1"
 }
 
-mainClassName = 'com.hedera.hashgraph.poa.App'
+mainClassName = "com.hedera.hashgraph.poa.App"
 
 jar {
     manifest {
-        attributes 'Main-Class': mainClassName
+        attributes "Main-Class": mainClassName
     }
 }
 
 shadowJar {
     // by default, this plugin generates a new `-all` jar
     // the empty string makes it override the non-all jar
-    classifier = ''
+    classifier = ""
+}
+
+flyway {
+    url = "jdbc:postgresql://localhost/hedera_proof_of_action__dev"
+    user = "postgres"
+    password = "password"
+//    locations = ["filesystem:src/main/resources/migrations/"]
 }
