@@ -1,19 +1,17 @@
 package com.hedera.hashgraph.poa;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.flogger.FluentLogger;
 import com.google.common.hash.HashCode;
+import com.google.common.hash.Hashing;
 import com.hedera.hashgraph.sdk.AccountId;
 import com.hedera.hashgraph.sdk.Client;
-import com.hedera.hashgraph.sdk.HederaPreCheckStatusException;
-import com.hedera.hashgraph.sdk.HederaReceiptStatusException;
 import com.hedera.hashgraph.sdk.MessageSubmitTransaction;
 import com.hedera.hashgraph.sdk.PrivateKey;
-import com.hedera.hashgraph.sdk.TopicCreateTransaction;
 import com.hedera.hashgraph.sdk.TopicId;
 import com.hedera.hashgraph.sdk.TransactionId;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 import io.vertx.core.Promise;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpServer;
@@ -25,18 +23,28 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import java8.util.concurrent.CompletableFuture;
-import java8.util.concurrent.CompletionStages;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.util.encoders.Hex;
 import org.threeten.bp.Instant;
 import org.threeten.bp.format.DateTimeFormatter;
-import org.threeten.bp.temporal.TemporalField;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
+import javax.annotation.Nullable;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.KeyGenerator;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.InvalidKeyException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.SecureRandom;
+import java.security.Security;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -48,6 +56,12 @@ public class App extends AbstractVerticle {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
     private static final Dotenv env = Dotenv.load();
+
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    private final SecretKey secretKey = new SecretKeySpec(
+        Hex.decode(env.get("SECRET_KEY")), "AES"
+    );
 
     private final AccountId hederaOperatorId = AccountId.fromString(
         Objects.requireNonNull(env.get("HEDERA_OPERATOR_ID")));
@@ -67,6 +81,7 @@ public class App extends AbstractVerticle {
     private HttpServer httpServer;
 
     public static void main(String[] args) {
+        Security.addProvider(new BouncyCastleProvider());
         vertx().deployVerticle(new App());
     }
 
@@ -111,14 +126,8 @@ public class App extends AbstractVerticle {
     }
 
     private void handleSubmitAction(RoutingContext rx) {
-        var payload = rx.getBodyAsString();
+        var req = Json.decodeValue(rx.getBody(), ActionRequest.class);
         var res = rx.response();
-
-        if (payload.isEmpty()) {
-            // the payload should at least be *something*
-            res.setStatusCode(400).end();
-            return;
-        }
 
         // pre-generate the transaction ID so we can save the record of the action
         var transactionId = TransactionId.generate(hederaOperatorId);
@@ -126,12 +135,48 @@ public class App extends AbstractVerticle {
         // create a future to receive the action ID
         var actionIdFut = new CompletableFuture<Long>();
 
+        // prepare the message to submit to hedera
+        byte[] messageToSubmit = req.payload.getBytes();
+
+        switch (req.submit) {
+            case DIRECT:
+                break;
+
+            case HASH:
+                // noinspection UnstableApiUsage
+                messageToSubmit = Hashing.sha384().hashBytes(messageToSubmit).toString().getBytes();
+                break;
+
+            case ENCRYPTED:
+                Cipher cipher = null;
+
+                try {
+                    cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
+                } catch (NoSuchAlgorithmException | NoSuchProviderException | NoSuchPaddingException e) {
+                    throw new RuntimeException(e);
+                }
+
+                try {
+                    cipher.init(Cipher.ENCRYPT_MODE, secretKey);
+                } catch (InvalidKeyException e) {
+                    throw new RuntimeException(e);
+                }
+
+                try {
+                    messageToSubmit = cipher.doFinal(messageToSubmit);
+                } catch (IllegalBlockSizeException | BadPaddingException e) {
+                    throw new RuntimeException(e);
+                }
+
+                break;
+        }
+
         // submit to HCS
         // note: this intentionally does not block the HTTP request from progressing, we want to immediately return
         //       to the client here
         new MessageSubmitTransaction()
             .setTransactionId(transactionId)
-            .setMessage(payload)
+            .setMessage(messageToSubmit)
             .setTopicId(hederaTopicId)
             .executeAsync(hederaClient)
             // note: futures flow so nicely, this is almost sync. level clarity and its async execution here
@@ -175,7 +220,7 @@ public class App extends AbstractVerticle {
             "INSERT INTO actions ( payload, transaction_id_num, transaction_id_valid_start ) " +
             "VALUES ( $1, $2, $3 ) " +
             "RETURNING id"
-        ).execute(Tuple.of(payload, transactionId.accountId.num, instantToNanos(transactionId.validStart)), v -> {
+        ).execute(Tuple.of(req.payload, transactionId.accountId.num, instantToNanos(transactionId.validStart)), v -> {
             if (v.failed()) {
                 rx.fail(v.cause());
                 return;
@@ -193,7 +238,7 @@ public class App extends AbstractVerticle {
                 // the idea is we record the action but we are pending on the proof
                 res.setStatusCode(202)
                     .putHeader("content-type", "application/json")
-                    .end(Json.encode(new PendingAction(transactionId.toString())));
+                    .end(Json.encode(new PendingActionResponse(transactionId.toString())));
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -203,7 +248,7 @@ public class App extends AbstractVerticle {
     private void handleFindAction(RoutingContext rx) {
         var res = rx.response();
         try {
-            var handler = Promise.<RowSet<Action>>promise();
+            var handler = Promise.<RowSet<ActionResponse>>promise();
 
             var queryPayload = rx.request().getParam("payload");
             if (queryPayload != null) {
@@ -214,7 +259,7 @@ public class App extends AbstractVerticle {
                     "FROM proofs p " +
                     "INNER JOIN actions a ON a.id = p.action_id " +
                     "WHERE a.payload = $1"
-                ).mapping(Action::new).execute(Tuple.of(queryPayload), handler);
+                ).mapping(ActionResponse::new).execute(Tuple.of(queryPayload), handler);
             }
 
             var queryTransactionId = rx.request().getParam("transactionId");
@@ -227,7 +272,7 @@ public class App extends AbstractVerticle {
                     "INNER JOIN actions a ON a.id = p.action_id " +
                     "WHERE a.transaction_id_num = $1 " +
                     "AND a.transaction_id_valid_start = $2"
-                ).mapping(Action::new).execute(Tuple.of(transactionId.accountId.num, instantToNanos(transactionId.validStart)), handler);
+                ).mapping(ActionResponse::new).execute(Tuple.of(transactionId.accountId.num, instantToNanos(transactionId.validStart)), handler);
             }
 
             if (queryTransactionId == null && queryPayload == null) {
@@ -287,16 +332,35 @@ public class App extends AbstractVerticle {
 
         return new TransactionId(accountId, timestamp);
     }
+//
+//    // encrypt with AES
+//    private byte[] encryptAes(byte[] message) {
+////        byte[] iv = new byte[128/8];
+////        secureRandom.nextBytes(iv);
+////        IvParameterSpec ivspec = new IvParameterSpec(iv);
+//
+//    }
 
-    private static class PendingAction {
+    private enum ActionRequestSubmit {
+        @JsonProperty("direct") DIRECT,
+        @JsonProperty("hash") HASH,
+        @JsonProperty("encrypted") ENCRYPTED
+    }
+
+    private static class ActionRequest {
+        public String payload;
+        public ActionRequestSubmit submit = ActionRequestSubmit.DIRECT;
+    }
+
+    private static class PendingActionResponse {
         public final String transactionId;
 
-        PendingAction(String transactionId) {
+        PendingActionResponse(String transactionId) {
             this.transactionId = transactionId;
         }
     }
 
-    private static class Action {
+    private static class ActionResponse {
         public final String transactionId;
 
         public final String consensusTimestamp;
@@ -305,7 +369,7 @@ public class App extends AbstractVerticle {
 
         public final String runningHash;
 
-        Action(Row row) {
+        ActionResponse(Row row) {
             var transactionAccountId = row.getLong("transaction_id_num");
             var validStart = row.getLong("transaction_id_valid_start");
             var seqNum = row.getLong("sequence_number");

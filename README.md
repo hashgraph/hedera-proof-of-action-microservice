@@ -25,6 +25,14 @@ transactions and a Topic ID to submit transactions to.
 $ java -jar build/libs/hedera-proof-of-action.jar
 ```
 
+## Example
+
+### Submit an action
+
+```
+
+```
+
 ## Contributing to this Project
 
 We welcome participation from all developers!

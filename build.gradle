@@ -21,6 +21,9 @@ dependencies {
     implementation "com.hedera.hashgraph:sdk-corda:2.0.0-beta.1"
     implementation "io.grpc:grpc-netty:1.29.0"
 
+    // https://bouncycastle.org/java.html
+    implementation "org.bouncycastle:bcpkix-jdk15on:1.65"
+
     // https://github.com/google/guava
     implementation "com.google.guava:guava:29.0-jre"
 
