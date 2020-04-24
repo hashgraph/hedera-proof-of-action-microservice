@@ -252,8 +252,6 @@ public class App extends AbstractVerticle {
 
             var queryPayload = rx.request().getParam("payload");
             if (queryPayload != null) {
-                logger.atInfo().log("payload = %s", queryPayload);
-
                 db.preparedQuery(
                     "SELECT a.transaction_id_num, a.transaction_id_valid_start, p.sequence_number, p.running_hash, p.consensus_timestamp " +
                     "FROM proofs p " +
