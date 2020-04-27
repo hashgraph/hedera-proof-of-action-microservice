@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Appenders>
+        <HederaAppender name="HederaAppender" operatorId="0.0.21883" topicId="0.0.30343" operatorKey="302e020100300506032b6570042204207f7ac6c8025a15ff1e07ef57c7295601379a4e9a526560790ae85252393868f0" networkName="testnet" />
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="HederaAppender"/>
+        </Root>
+    </Loggers>
+</Configuration>
