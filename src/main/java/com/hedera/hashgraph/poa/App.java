@@ -18,6 +18,7 @@ import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.CorsHandler;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
@@ -85,6 +86,13 @@ public class App extends AbstractVerticle {
         vertx().deployVerticle(new App());
     }
 
+    private static Instant nanosToInstant(long nanos) {
+        var seconds = nanos / 1000000000;
+        var fracNanos = nanos % 1000000000;
+
+        return Instant.ofEpochSecond(seconds, fracNanos);
+    }
+
     @Override
     public void start(Promise<Void> startPromise) {
         // create the database pool
@@ -96,8 +104,11 @@ public class App extends AbstractVerticle {
         var router = router(vertx);
         router.errorHandler(500, this::handleError);
 
-        // handle accepting request bodies but cap it at 4 Ki
-        router.route().handler(BodyHandler.create().setBodyLimit(4096));
+        router.route()
+            // handle accepting request bodies but cap it at 4 Ki
+            .handler(BodyHandler.create().setBodyLimit(4096))
+            // let anyone in, it's a free world
+            .handler(CorsHandler.create("*"));
 
         router.post("/v1/action").handler(this::handleSubmitAction);
         router.get("/v1/action").handler(this::handleFindAction);
@@ -306,13 +317,6 @@ public class App extends AbstractVerticle {
     // converts a Java Instant to nanoseconds for storage
     private long instantToNanos(Instant instant) {
         return (instant.getEpochSecond() * 1000000000) + instant.getNano();
-    }
-
-    private static Instant nanosToInstant(long nanos) {
-        var seconds = nanos / 1000000000;
-        var fracNanos = nanos % 1000000000;
-
-        return Instant.ofEpochSecond(seconds, fracNanos);
     }
 
     // convert a String to a Hedera Transaction ID
