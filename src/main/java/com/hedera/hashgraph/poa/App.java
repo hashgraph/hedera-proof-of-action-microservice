@@ -111,7 +111,9 @@ public class App extends AbstractVerticle {
             .handler(CorsHandler.create("*"));
 
         router.post("/v1/action").handler(this::handleSubmitAction);
+
         router.get("/v1/action").handler(this::handleFindAction);
+        router.post("/v1/action/search").handler(this::handleSearchAction);
 
         httpServer.requestHandler(router);
         httpServer.listen(8080, "0.0.0.0", v -> {
@@ -256,24 +258,22 @@ public class App extends AbstractVerticle {
         });
     }
 
-    private void handleFindAction(RoutingContext rx) {
+    private void handleSearchActionRequest(RoutingContext rx, SearchActionRequest req) {
         var res = rx.response();
         try {
             var handler = Promise.<RowSet<ActionResponse>>promise();
 
-            var queryPayload = rx.request().getParam("payload");
-            if (queryPayload != null) {
+            if (req.payload != null) {
                 db.preparedQuery(
                     "SELECT a.transaction_id_num, a.transaction_id_valid_start, p.sequence_number, p.running_hash, p.consensus_timestamp " +
                     "FROM proofs p " +
                     "INNER JOIN actions a ON a.id = p.action_id " +
                     "WHERE a.payload = $1"
-                ).mapping(ActionResponse::new).execute(Tuple.of(queryPayload), handler);
+                ).mapping(ActionResponse::new).execute(Tuple.of(req.payload), handler);
             }
 
-            var queryTransactionId = rx.request().getParam("transactionId");
-            if (queryTransactionId != null) {
-                var transactionId = transactionIdFromString(queryTransactionId);
+            if (req.transactionId != null) {
+                var transactionId = transactionIdFromString(req.transactionId);
 
                 db.preparedQuery(
                     "SELECT a.transaction_id_num, a.transaction_id_valid_start, p.sequence_number, p.running_hash, p.consensus_timestamp " +
@@ -284,7 +284,7 @@ public class App extends AbstractVerticle {
                 ).mapping(ActionResponse::new).execute(Tuple.of(transactionId.accountId.num, instantToNanos(transactionId.validStart)), handler);
             }
 
-            if (queryTransactionId == null && queryPayload == null) {
+            if (req.transactionId == null && req.payload == null) {
                 // need at least one query parameter
                 res.setStatusCode(400).end();
                 return;
@@ -312,6 +312,17 @@ public class App extends AbstractVerticle {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void handleSearchAction(RoutingContext rx) {
+        handleSearchActionRequest(rx, Json.decodeValue(rx.getBody(), SearchActionRequest.class));
+    }
+
+    private void handleFindAction(RoutingContext rx) {
+        handleSearchActionRequest(rx, new SearchActionRequest(
+            rx.request().getParam("payload"),
+            rx.request().getParam("transactionId")
+        ));
     }
 
     // converts a Java Instant to nanoseconds for storage
@@ -344,6 +355,18 @@ public class App extends AbstractVerticle {
     private static class ActionRequest {
         public String payload;
         public ActionRequestSubmit submit = ActionRequestSubmit.DIRECT;
+    }
+
+    private static class SearchActionRequest {
+        public String payload;
+        public String transactionId;
+
+        SearchActionRequest() {}
+
+        SearchActionRequest(String payload, String transactionId) {
+            this.payload = payload;
+            this.transactionId = transactionId;
+        }
     }
 
     private static class PendingActionResponse {

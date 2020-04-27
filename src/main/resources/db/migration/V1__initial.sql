@@ -13,7 +13,7 @@ CREATE TABLE actions
     UNIQUE (transaction_id_num, transaction_id_valid_start)
 );
 
-CREATE INDEX ON actions (payload);
+-- CREATE INDEX ON actions (payload);
 CREATE INDEX ON actions (transaction_id_valid_start, transaction_id_num);
 
 CREATE TABLE proofs
