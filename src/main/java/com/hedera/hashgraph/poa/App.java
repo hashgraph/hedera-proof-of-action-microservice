@@ -330,14 +330,6 @@ public class App extends AbstractVerticle {
 
         return new TransactionId(accountId, timestamp);
     }
-//
-//    // encrypt with AES
-//    private byte[] encryptAes(byte[] message) {
-////        byte[] iv = new byte[128/8];
-////        secureRandom.nextBytes(iv);
-////        IvParameterSpec ivspec = new IvParameterSpec(iv);
-//
-//    }
 
     private enum ActionRequestSubmit {
         @JsonProperty("direct") DIRECT,
