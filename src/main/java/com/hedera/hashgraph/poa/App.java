@@ -23,6 +23,8 @@ import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.Tuple;
 import java8.util.concurrent.CompletableFuture;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.util.encoders.Hex;
 import org.threeten.bp.Instant;
@@ -54,7 +56,9 @@ import static java8.util.concurrent.CompletableFuture.delayedExecutor;
 
 public class App extends AbstractVerticle {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
-
+    
+    final static Logger hederaLogger = LogManager.getLogger(App.class);
+    
     private static final Dotenv env = Dotenv.load();
 
     private final SecureRandom secureRandom = new SecureRandom();
@@ -170,6 +174,8 @@ public class App extends AbstractVerticle {
 
                 break;
         }
+
+        hederaLogger.info("Submitting Message: " + messageToSubmit);
 
         // submit to HCS
         // note: this intentionally does not block the HTTP request from progressing, we want to immediately return

@@ -1,0 +1,3 @@
+[submodule "log4j2-hedera"]
+	path = log4j2-hedera
+	url = https://github.com/hashgraph/log4j2-hedera
