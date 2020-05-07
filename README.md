@@ -24,9 +24,9 @@ $ docker run -p 8080:8080 -d \
  
  * `HEDERA_OEPRATOR_KEY` – The matching private key for the `HEDERA_OPERATOR_ID`.
  
- * `HEDERA_TOPIC_ID` – The topic ID to use for consensus.
+ * `HEDERA_TOPIC_ID` – The topic ID to use for consensus. A new one will be created if not provided.
  
- * `SECRET_KEY` – The secret key to use to optionally encrypt messages to Hedera.  
+ * `SECRET_KEY` – The secret key to use to optionally encrypt messages to Hedera. A new one will be generated if not provided.  
 
 ## Usage
 
