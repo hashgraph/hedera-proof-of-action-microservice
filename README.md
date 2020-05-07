@@ -1,31 +1,34 @@
-# Hedera™ Hashgraph Proof-of-Action API
+# Hedera™ Hashgraph Proof-of-Action Microservice
 
 ## Requirements
 
  * PostgreSQL 10+
+
+## Install
+
+Ensure that the database exists. On the first run, the necessary tables will be created.
+
+```sh
+$ docker run -p 8080:8080 -d \
+    -e DATABASE_URL="postgres://postgres:password@127.0.0.1/hedera_proof_of_action__dev" \
+    -e HEDERA_OPERATOR_ID="0.0.xxx" \
+    -e HEDERA_OPERATOR_KEY="302..." \
+    -e HEDERA_TOPIC_ID="0.0.yyy" \
+    -e SECRET_KEY="..."
+    NAME
+```
+
+ * `DATABASE_URL` – URL to the postgres database server to use for persistence.
  
- * Java 12+
+ * `HEDERA_OPERATOR_ID` – The Account ID on Hedera™ that will pay for the transactions.
  
+ * `HEDERA_OEPRATOR_KEY` – The matching private key for the `HEDERA_OPERATOR_ID`.
+ 
+ * `HEDERA_TOPIC_ID` – The topic ID to use for consensus.
+ 
+ * `SECRET_KEY` – The secret key to use to optionally encrypt messages to Hedera.  
+
 ## Usage
-
-### Build
-
-```
-$ ./gradlew build
-```
-
-### Configure
-
-Copy [`.env.sample`](.env.sample) to `.env` and fill out. You will need an operator to submit 
-transactions and a Topic ID to submit transactions to. 
-
-### Run
-
-```
-$ java -jar build/libs/hedera-proof-of-action.jar
-```
-
-## Example
 
 ### Submit an action
 
