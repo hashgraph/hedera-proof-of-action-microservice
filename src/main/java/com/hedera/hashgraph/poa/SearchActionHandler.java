@@ -10,9 +10,10 @@ import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.RowSet;
-import io.vertx.sqlclient.Tuple;
+import io.vertx.sqlclient.impl.ArrayTuple;
 import org.threeten.bp.Instant;
 
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -34,7 +35,8 @@ public class SearchActionHandler implements Handler<RoutingContext> {
         if (rx.request().method() == HttpMethod.GET) {
             req = new SearchActionRequest(
                 rx.request().getParam("payload"),
-                rx.request().getParam("transactionId")
+                rx.request().getParam("transactionId"),
+                rx.request().getParam("clientId")
             );
         } else {
             var reqBody = rx.getBody();
@@ -51,34 +53,41 @@ public class SearchActionHandler implements Handler<RoutingContext> {
         try {
             var handler = Promise.<RowSet<SearchActionResponse>>promise();
 
+            var clause = new ArrayList<String>();
+            var args = new ArrayTuple(3);
+
+            if (req.clientId != null) {
+                clause.add(String.format("(a.client_id = $%d)", args.size() + 1));
+                args.addValue(req.clientId);
+            }
+
             if (req.payload != null) {
-                db.preparedQuery(
-                    "SELECT a.transaction_id_num, a.transaction_id_valid_start, p.sequence_number, p.running_hash, p.consensus_timestamp " +
-                    "FROM proofs p " +
-                    "INNER JOIN actions a ON a.id = p.action_id " +
-                    "WHERE a.payload = $1" +
-                    "ORDER BY p.consensus_timestamp DESC"
-                ).mapping(SearchActionResponse::new).execute(Tuple.of(req.payload), handler);
+                clause.add(String.format("(a.payload = $%d)", args.size() + 1));
+                args.addValue(req.payload);
             }
 
             if (req.transactionId != null) {
                 var transactionId = transactionIdFromString(req.transactionId);
+                clause.add(String.format("(a.transaction_id_num = $%d AND a.transaction_id_valid_start = $%d)",
+                    args.size() + 1, args.size() + 2));
 
-                db.preparedQuery(
-                    "SELECT a.transaction_id_num, a.transaction_id_valid_start, p.sequence_number, p.running_hash, p.consensus_timestamp " +
-                    "FROM proofs p " +
-                    "INNER JOIN actions a ON a.id = p.action_id " +
-                    "WHERE a.transaction_id_num = $1 " +
-                    "AND a.transaction_id_valid_start = $2" +
-                    "ORDER BY p.consensus_timestamp DESC"
-                ).mapping(SearchActionResponse::new).execute(Tuple.of(transactionId.accountId.num, InstantConverter.toNanos(transactionId.validStart)), handler);
+                args.addValue(transactionId.accountId.num);
+                args.addValue(InstantConverter.toNanos(transactionId.validStart));
             }
 
-            if (req.transactionId == null && req.payload == null) {
+            if (args.size() == 0) {
                 // need at least one query parameter
                 res.setStatusCode(400).end();
                 return;
             }
+
+            db.preparedQuery(
+                "SELECT a.transaction_id_num, a.transaction_id_valid_start, p.sequence_number, p.running_hash, p.consensus_timestamp, p.transaction_hash, a.client_id " +
+                "FROM proofs p " +
+                "INNER JOIN actions a ON a.id = p.action_id " +
+                "WHERE " + String.join(" AND ", clause) + " " +
+                "ORDER BY p.consensus_timestamp DESC"
+            ).mapping(SearchActionResponse::new).execute(args, handler);
 
             handler.future().onComplete(v -> {
                 if (v.failed()) {

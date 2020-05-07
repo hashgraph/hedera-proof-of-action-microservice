@@ -122,12 +122,13 @@ public class CreateActionHandler implements Handler<RoutingContext> {
                     actionId,
                     InstantConverter.toNanos(record.consensusTimestamp),
                     record.receipt.topicSequenceNumber,
-                    Buffer.buffer(Objects.requireNonNull(record.receipt.topicRunningHash).toByteArray())
+                    Buffer.buffer(Objects.requireNonNull(record.receipt.topicRunningHash).toByteArray()),
+                    Buffer.buffer(record.transactionHash.toByteArray())
                 );
 
                 db.preparedQuery(
-                    "INSERT INTO proofs ( action_id, consensus_timestamp, sequence_number, running_hash ) " +
-                    "VALUES ( $1, $2, $3, $4 )"
+                    "INSERT INTO proofs ( action_id, consensus_timestamp, sequence_number, running_hash, transaction_hash ) " +
+                    "VALUES ( $1, $2, $3, $4, $5 )"
                 ).execute(params, v -> {
                     if (v.failed()) {
                         fut.completeExceptionally(v.cause());
@@ -151,10 +152,10 @@ public class CreateActionHandler implements Handler<RoutingContext> {
             });
 
         db.preparedQuery(
-            "INSERT INTO actions ( payload, transaction_id_num, transaction_id_valid_start ) " +
-            "VALUES ( $1, $2, $3 ) " +
+            "INSERT INTO actions ( payload, transaction_id_num, transaction_id_valid_start, client_id ) " +
+            "VALUES ( $1, $2, $3, $4 ) " +
             "RETURNING id"
-        ).execute(Tuple.of(req.payload, transactionId.accountId.num, InstantConverter.toNanos(transactionId.validStart)), v -> {
+        ).execute(Tuple.of(req.payload, transactionId.accountId.num, InstantConverter.toNanos(transactionId.validStart), req.clientId), v -> {
             if (v.failed()) {
                 rx.fail(v.cause());
                 return;
