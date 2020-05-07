@@ -56,7 +56,8 @@ public class SearchActionHandler implements Handler<RoutingContext> {
                     "SELECT a.transaction_id_num, a.transaction_id_valid_start, p.sequence_number, p.running_hash, p.consensus_timestamp " +
                     "FROM proofs p " +
                     "INNER JOIN actions a ON a.id = p.action_id " +
-                    "WHERE a.payload = $1"
+                    "WHERE a.payload = $1" +
+                    "ORDER BY p.consensus_timestamp DESC"
                 ).mapping(SearchActionResponse::new).execute(Tuple.of(req.payload), handler);
             }
 
@@ -68,7 +69,8 @@ public class SearchActionHandler implements Handler<RoutingContext> {
                     "FROM proofs p " +
                     "INNER JOIN actions a ON a.id = p.action_id " +
                     "WHERE a.transaction_id_num = $1 " +
-                    "AND a.transaction_id_valid_start = $2"
+                    "AND a.transaction_id_valid_start = $2" +
+                    "ORDER BY p.consensus_timestamp DESC"
                 ).mapping(SearchActionResponse::new).execute(Tuple.of(transactionId.accountId.num, InstantConverter.toNanos(transactionId.validStart)), handler);
             }
 
