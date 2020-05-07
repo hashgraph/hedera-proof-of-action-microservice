@@ -35,6 +35,8 @@ $ docker run -p 8080:8080 -d \
 An action can be submitted to HCS as a `hash`, `encrypted`, or `direct` (
 `direct` is the default).
 
+An optional, client-generated, non-unique `clientId` can be submitted and later used to lookup actions. 
+
 ```json
 POST /v1/action/
 content-type: application/json
@@ -57,8 +59,7 @@ content-type: application/json
 
 ### Prove an action
 
-An action can be proven by requesting by the original payload
-or the returned transaction ID.
+An action can be proven by requesting by the original payload, the returned transaction ID, or a client-generated ID.
 
 ```json
 GET /v1/action/?payload=anything%20goes%20here
