@@ -38,6 +38,10 @@ dependencies {
     // https://google.github.io/flogger/
     implementation "com.google.flogger:flogger:0.5.1"
     implementation "com.google.flogger:flogger-system-backend:0.5.1"
+
+    // https://flywaydb.org/
+    implementation "org.flywaydb:flyway-core:6.4.1"
+    implementation "org.postgresql:postgresql:42.2.12"
 }
 
 mainClassName = "com.hedera.hashgraph.poa.App"
