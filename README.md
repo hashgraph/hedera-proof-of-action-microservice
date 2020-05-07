@@ -15,7 +15,7 @@ $ docker run -p 8080:8080 -d \
     -e HEDERA_OPERATOR_KEY="302..." \
     -e HEDERA_TOPIC_ID="0.0.yyy" \
     -e SECRET_KEY="..."
-    NAME
+    docker.pkg.github.com/hashgraph/hedera-proof-of-action-microservice/hedera-proof-of-action:897
 ```
 
  * `DATABASE_URL` – URL to the postgres database server to use for persistence.
