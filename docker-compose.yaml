@@ -1,0 +1,26 @@
+version: "3"
+services:
+  db:
+    image: postgres:12
+    restart: on-failure
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: hedera_proof_of_action__dev
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  poa:
+    build:
+      context: .
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+
