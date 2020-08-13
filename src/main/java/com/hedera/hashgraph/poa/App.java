@@ -60,7 +60,7 @@ public class App extends AbstractVerticle {
         // generate the secret key and announce if we needed to
 
         var secretKeyText = env.get("SECRET_KEY");
-        if (secretKeyText == null) {
+        if (secretKeyText == null || secretKeyText.isBlank()) {
             var random = new SecureRandom();
             var keyBytes = new byte[32];
             random.nextBytes(keyBytes);
