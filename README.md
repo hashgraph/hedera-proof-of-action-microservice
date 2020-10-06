@@ -91,6 +91,16 @@ content-type: application/json
 }
 ```
 
+#### INVALID_TRANSACTION_START errors
+
+In some instances, the clock inside the docker proof of action container drifts, resulting in an error similar to `failed pre-check with the status INVALID_TRANSACTION_START`
+
+running the command below will re-synchronise the clock in the container (no need to restart it)
+
+```shell script
+docker run --rm --privileged hedera-proof-of-action-microservice_poa hwclock -s
+```
+
 ### Prove an action
 
 An action can be proven by requesting by the original payload, the returned transaction ID, or a client-generated ID.
