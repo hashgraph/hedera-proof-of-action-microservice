@@ -30,6 +30,7 @@ When the business application wants to prove that a particular event was memoria
 
 ## Requirements
 
+ * Java 14
  * Docker
  * Docker-compose
 
@@ -48,6 +49,8 @@ Edit the following environment variables
  * `HEDERA_OPERATOR_ID` – The Account ID on Hedera™ that will pay for the transactions.
  
  * `HEDERA_OEPRATOR_KEY` – The matching private key for the `HEDERA_OPERATOR_ID`.
+
+ * `HEDERA_NETWORK` - The Hedera Network to use: `testnet`, `mainnet` or `previewnet`
  
  * `HEDERA_TOPIC_ID` – The topic ID to use for consensus. A new one will be created if not provided.
  
