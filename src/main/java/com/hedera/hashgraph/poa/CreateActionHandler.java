@@ -4,7 +4,7 @@ import com.google.common.flogger.FluentLogger;
 import com.google.common.hash.Hashing;
 import com.hedera.hashgraph.sdk.AccountId;
 import com.hedera.hashgraph.sdk.Client;
-import com.hedera.hashgraph.sdk.MessageSubmitTransaction;
+import com.hedera.hashgraph.sdk.TopicMessageSubmitTransaction;
 import com.hedera.hashgraph.sdk.TopicId;
 import com.hedera.hashgraph.sdk.TransactionId;
 import io.vertx.core.Handler;
@@ -13,7 +13,7 @@ import io.vertx.core.json.Json;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.Tuple;
-import java8.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletableFuture;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -26,7 +26,7 @@ import java.security.NoSuchProviderException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import static java8.util.concurrent.CompletableFuture.delayedExecutor;
+import static java.util.concurrent.CompletableFuture.delayedExecutor;
 
 public class CreateActionHandler implements Handler<RoutingContext> {
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
@@ -108,13 +108,13 @@ public class CreateActionHandler implements Handler<RoutingContext> {
         // submit to HCS
         // note: this intentionally does not block the HTTP request from progressing, we want to immediately return
         //       to the client here
-        new MessageSubmitTransaction()
+        new TopicMessageSubmitTransaction()
             .setTransactionId(transactionId)
             .setMessage(messageToSubmit)
             .setTopicId(hederaTopicId)
             .executeAsync(hedera)
             // note: futures flow so nicely, this is almost sync. level clarity and its async execution here
-            .thenComposeAsync(id -> id.getRecordAsync(hedera), delayedExecutor(5, TimeUnit.SECONDS))
+            .thenComposeAsync(id -> id.transactionId.getRecordAsync(hedera), delayedExecutor(5, TimeUnit.SECONDS))
             .thenCombineAsync(actionIdFut, (record, actionId) -> {
                 var fut = new CompletableFuture<Void>();
 
