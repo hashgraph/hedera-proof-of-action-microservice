@@ -85,15 +85,18 @@ public class App extends AbstractVerticle {
         // announce the topic ID we'll be using and/or create the topic ID if one was not provided
 
         var hederaTopicIdText = env.get("HEDERA_TOPIC_ID");
-        if (hederaTopicIdText == null) {
+        if ((hederaTopicIdText == null) || (hederaTopicIdText.isEmpty())) {
             // make a new topic ID
-            hederaTopicId = new TopicCreateTransaction()
+            var transactionId = new TopicCreateTransaction()
                 .setSubmitKey(hederaOperatorKey)
                 .execute(hederaClient)
+                    .transactionId;
+
+            hederaTopicId = transactionId
                 .getReceipt(hederaClient)
                 .topicId;
 
-            logger.atWarning().log("create new topic ID %s", hederaTopicId);
+            logger.atWarning().log("created new topic ID %s", hederaTopicId);
         } else {
             hederaTopicId = TopicId.fromString(hederaTopicIdText);
         }
