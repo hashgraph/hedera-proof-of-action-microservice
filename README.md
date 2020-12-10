@@ -47,7 +47,7 @@ Edit the following environment variables
 
  * `HEDERA_OPERATOR_ID` – The Account ID on Hedera™ that will pay for the transactions.
  
- * `HEDERA_OEPRATOR_KEY` – The matching private key for the `HEDERA_OPERATOR_ID`.
+ * `HEDERA_OPERATOR_KEY` – The matching private key for the `HEDERA_OPERATOR_ID`.
  
  * `HEDERA_TOPIC_ID` – The topic ID to use for consensus. A new one will be created if not provided.
  
