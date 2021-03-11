@@ -4,7 +4,9 @@ import com.google.common.hash.HashCode;
 import com.hedera.hashgraph.sdk.AccountId;
 import com.hedera.hashgraph.sdk.TransactionId;
 import io.vertx.sqlclient.Row;
-import org.threeten.bp.format.DateTimeFormatter;
+
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
 
 public class SearchActionResponse {
     public final String transactionId;
@@ -29,7 +31,7 @@ public class SearchActionResponse {
 
         this.transactionId = new TransactionId(
             new AccountId(transactionAccountId),
-            InstantConverter.fromNanos(validStart)
+                Instant.ofEpochSecond(0, validStart)
         ).toString();
 
         this.sequenceNumber = seqNum;

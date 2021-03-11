@@ -30,6 +30,7 @@ When the business application wants to prove that a particular event was memoria
 
 ## Requirements
 
+ * Java 14
  * Docker
  * Docker-compose
 
@@ -48,6 +49,8 @@ Edit the following environment variables
  * `HEDERA_OPERATOR_ID` – The Account ID on Hedera™ that will pay for the transactions.
  
  * `HEDERA_OPERATOR_KEY` – The matching private key for the `HEDERA_OPERATOR_ID`.
+
+ * `HEDERA_NETWORK` - The Hedera Network to use: `testnet`, `mainnet` or `previewnet`
  
  * `HEDERA_TOPIC_ID` – The topic ID to use for consensus. A new one will be created if not provided.
  
@@ -86,6 +89,16 @@ content-type: application/json
 {
     "transactionId": "0.0.1035@1587742118.141000000"
 }
+```
+
+#### INVALID_TRANSACTION_START errors
+
+In some instances, the clock inside the docker proof of action container drifts, resulting in an error similar to `failed pre-check with the status INVALID_TRANSACTION_START`
+
+running the command below will re-synchronise the clock in the container (no need to restart it)
+
+```shell script
+docker run --rm --privileged hedera-proof-of-action-microservice_poa hwclock -s
 ```
 
 ### Prove an action

@@ -18,8 +18,11 @@ repositories {
 sourceCompatibility = 13
 
 dependencies {
-    implementation "com.hedera.hashgraph:sdk-corda:2.0.0-beta.1"
+    implementation "com.hedera.hashgraph:sdk:2.0.0-beta.2"
     implementation "io.grpc:grpc-netty:1.29.0"
+
+    compile "net.sourceforge.streamsupport:streamsupport:1.7.2"
+    compile "net.sourceforge.streamsupport:streamsupport-cfuture:1.7.2"
 
     // https://bouncycastle.org/java.html
     implementation "org.bouncycastle:bcpkix-jdk15on:1.65"

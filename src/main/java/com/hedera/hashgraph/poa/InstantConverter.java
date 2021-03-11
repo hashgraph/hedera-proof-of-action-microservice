@@ -1,6 +1,6 @@
 package com.hedera.hashgraph.poa;
 
-import org.threeten.bp.Instant;
+import java.time.Instant;
 
 public class InstantConverter {
     private InstantConverter() {}

@@ -22,5 +22,7 @@ services:
       - db
     env_file:
       - .env
+    environment:
+      - DATABASE_URL=postgresql://db:5432/hedera_proof_of_action__dev
 
 

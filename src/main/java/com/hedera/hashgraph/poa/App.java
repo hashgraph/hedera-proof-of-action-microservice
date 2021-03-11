@@ -49,8 +49,7 @@ public class App extends AbstractVerticle {
     private static TopicId hederaTopicId;
 
     // note: this does not connect until first use
-    private static final Client hederaClient = Client.forTestnet()
-        .setOperator(hederaOperatorId, hederaOperatorKey);
+    private static Client hederaClient;
 
     private HttpServer httpServer;
 
@@ -82,23 +81,50 @@ public class App extends AbstractVerticle {
             .load()
             .migrate();
 
+        setupClient();
+
         // announce the topic ID we'll be using and/or create the topic ID if one was not provided
 
         var hederaTopicIdText = env.get("HEDERA_TOPIC_ID");
-        if (hederaTopicIdText == null) {
+        if ((hederaTopicIdText == null) || (hederaTopicIdText.isEmpty())) {
             // make a new topic ID
-            hederaTopicId = new TopicCreateTransaction()
+            var transactionId = new TopicCreateTransaction()
                 .setSubmitKey(hederaOperatorKey)
                 .execute(hederaClient)
+                    .transactionId;
+
+            hederaTopicId = transactionId
                 .getReceipt(hederaClient)
                 .topicId;
 
-            logger.atWarning().log("create new topic ID %s", hederaTopicId);
+            logger.atWarning().log("created new topic ID %s", hederaTopicId);
         } else {
             hederaTopicId = TopicId.fromString(hederaTopicIdText);
         }
 
         vertx().deployVerticle(new App());
+    }
+
+    private static void setupClient() {
+        // setup the Hedera client from .env
+        var network = env.get("HEDERA_NETWORK");
+
+        if ((network == null) || (network.isBlank())) {
+            logger.atSevere().log("HEDERA_NETWORK environment variable not set - exiting");
+            System.exit(1);
+        }
+        switch (network.toLowerCase()) {
+            case "testnet":
+                hederaClient = Client.forTestnet();
+                break;
+            case "mainnet":
+                hederaClient = Client.forMainnet();
+                break;
+//            case "previewnet":
+//                hederaClient = Client.forPreviewNet();
+//            break;
+        }
+        hederaClient.setOperator(hederaOperatorId, hederaOperatorKey);
     }
 
     @Override

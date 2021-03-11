@@ -1,0 +1,115 @@
+{
+	"info": {
+		"_postman_id": "7b662259-e5b3-4243-95b6-9d0094425a5b",
+		"name": "POA",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Submit",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"id": "5ba2db0d-c138-4f61-a726-3fbd77539c81",
+						"exec": [
+							"const responseJson = pm.response.json();",
+							"const txId = responseJson.transactionId",
+							"",
+							"pm.collectionVariables.set('transactionId', txId);",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"payload\": \"{{payload}}\",\n    \"submit\": \"direct\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/v1/action/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"v1",
+						"action",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetByTXId",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": ""
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetByPayload",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": ""
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "b24883e3-0685-4708-9c33-58b2515c53ff",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "c00dc31c-1b50-45bd-a6c1-fd77ae88f5f5",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"id": "ae274fad-399e-4775-a800-c942d9efd485",
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"id": "d1e2825e-ef6c-4e78-ad44-dff7f20f8625",
+			"key": "transactionId",
+			"value": "0.0.11093@1601996102.287911702"
+		},
+		{
+			"id": "5db76dc5-d758-42a9-b6ec-02f21f268985",
+			"key": "payload",
+			"value": "anything goes here"
+		}
+	],
+	"protocolProfileBehavior": {}
+}

@@ -11,8 +11,8 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.pgclient.PgPool;
 import io.vertx.sqlclient.RowSet;
 import io.vertx.sqlclient.impl.ArrayTuple;
-import org.threeten.bp.Instant;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
