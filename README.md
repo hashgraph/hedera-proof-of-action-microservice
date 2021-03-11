@@ -48,7 +48,7 @@ Edit the following environment variables
 
  * `HEDERA_OPERATOR_ID` – The Account ID on Hedera™ that will pay for the transactions.
  
- * `HEDERA_OEPRATOR_KEY` – The matching private key for the `HEDERA_OPERATOR_ID`.
+ * `HEDERA_OPERATOR_KEY` – The matching private key for the `HEDERA_OPERATOR_ID`.
 
  * `HEDERA_NETWORK` - The Hedera Network to use: `testnet`, `mainnet` or `previewnet`
  
