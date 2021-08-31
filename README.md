@@ -25,8 +25,7 @@ When the business application invokes this API, the appropriate data (original o
 
 When the business application wants to prove that a particular event was memorialized on the public DLT, it invokes the prove_action API – either with the original business object, or with the Transction-ID. The HPoA microservice queries a mirror node (mirror nodes are run by Hedera as well as several third parties), and obtains the record of the transaction. It also creates an equivalent representation of the original object (encryption or hashed), and compares it with the representation obtained from the mirror node record. If the two match, it returns a successful response with the business object that was memorialized and appropriate details of the proof from the Hedera’s public ledger. In future, this proof will also contain the state proof obtained from Hedera.
 
-![Image of HPoA microservice architecture diagram](https://s3.amazonaws.com/hedera-com/Screen-Shot-2020-05-07-at-11.14.00-AM.png)
-
+![Image of HPoA microservice architecture diagram](docs/images/architecture.png)
 
 ## Requirements
 
