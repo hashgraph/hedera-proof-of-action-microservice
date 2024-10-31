@@ -9,8 +9,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: mattdavis0351/actions/docker-gpr@v1
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        image-name: hedera-proof-of-action
+      - name: Harden Runner
+        uses: step-security/harden-runner@91182cccc01eb5e619899d80e4e971d6181294a7 # v2.10.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Upload Docker image
+        uses: mattdavis0351/actions/docker-gpr@7fc5cbf3cc2defc2361f624fc2c2f22a686f4222 # v1.0.0
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          image-name: hedera-proof-of-action
